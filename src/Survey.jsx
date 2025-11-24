@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { database } from './firebase'
+import { ref, onValue, runTransaction } from 'firebase/database'
 
 function Survey() {
   const [selectedOption, setSelectedOption] = useState(null)
@@ -7,15 +9,41 @@ function Survey() {
     cocktailBar: 0,
     champagneOnly: 0
   })
+  const [loading, setLoading] = useState(true)
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const responsesRef = ref(database, 'responses')
+
+    const unsubscribe = onValue(responsesRef, (snapshot) => {
+      const data = snapshot.val()
+      if (data) {
+        setResponses(data)
+      } else {
+        setResponses({
+          cocktailBar: 0,
+          champagneOnly: 0
+        })
+      }
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (selectedOption) {
-      setResponses(prev => ({
-        ...prev,
-        [selectedOption]: prev[selectedOption] + 1
-      }))
-      setSubmitted(true)
+      const responseRef = ref(database, `responses/${selectedOption}`)
+
+      try {
+        await runTransaction(responseRef, (currentValue) => {
+          return (currentValue || 0) + 1
+        })
+        setSubmitted(true)
+      } catch (error) {
+        console.error('Error submitting response:', error)
+        alert('Failed to submit response. Please try again.')
+      }
     }
   }
 
@@ -25,6 +53,17 @@ function Survey() {
   }
 
   const totalResponses = responses.cocktailBar + responses.champagneOnly
+
+  if (loading) {
+    return (
+      <div className="survey-container">
+        <div className="survey-card">
+          <h1 className="survey-title">🎄 Christmas Party Survey 🎄</h1>
+          <p style={{ textAlign: 'center', color: '#4a5568' }}>Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="survey-container">
