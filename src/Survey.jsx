@@ -14,21 +14,29 @@ function Survey() {
   useEffect(() => {
     const responsesRef = doc(db, 'surveys', 'christmas-party')
 
-    const unsubscribe = onSnapshot(responsesRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data()
-        setResponses({
-          cocktailBar: data.cocktailBar || 0,
-          champagneOnly: data.champagneOnly || 0
-        })
-      } else {
-        setResponses({
-          cocktailBar: 0,
-          champagneOnly: 0
-        })
+    const unsubscribe = onSnapshot(
+      responsesRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data()
+          setResponses({
+            cocktailBar: data.cocktailBar || 0,
+            champagneOnly: data.champagneOnly || 0
+          })
+        } else {
+          setResponses({
+            cocktailBar: 0,
+            champagneOnly: 0
+          })
+        }
+        setLoading(false)
+      },
+      (error) => {
+        console.error('Failed to load survey responses:', error)
+        setLoading(false)
+        alert('Unable to load survey data. Please try again later.')
       }
-      setLoading(false)
-    })
+    )
 
     return () => unsubscribe()
   }, [])
