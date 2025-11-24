@@ -7,14 +7,14 @@ A React web app for collecting Christmas party preferences.
 - Survey with two options:
   - Small cocktail bar and champagne 🍸
   - Just champagne only 🥂
-- Real-time results tracking with Firebase
+- Real-time results tracking with Cloud Firestore
 - All users see the same synchronized results
 - Clean, modern UI with festive styling
 - Responsive design for mobile and desktop
 
 ## Firebase Setup
 
-This app uses Firebase Realtime Database to store and sync survey responses in real-time.
+This app uses Cloud Firestore to store and sync survey responses in real-time.
 
 ### 1. Create a Firebase Project
 
@@ -24,11 +24,11 @@ This app uses Firebase Realtime Database to store and sync survey responses in r
 4. Register your app with a nickname (e.g., "Christmas Survey")
 5. Copy the Firebase configuration object
 
-### 2. Enable Realtime Database
+### 2. Enable Cloud Firestore
 
-1. In Firebase Console, go to "Build" > "Realtime Database"
+1. In Firebase Console, go to "Build" > "Firestore Database"
 2. Click "Create Database"
-3. Choose a location (e.g., us-central1)
+3. Choose a location (e.g., us-central)
 4. Start in **test mode** for development (you can secure it later)
 5. Click "Enable"
 
@@ -42,26 +42,22 @@ This app uses Firebase Realtime Database to store and sync survey responses in r
 2. Open `.env.local` and fill in your Firebase credentials from step 1:
    ```env
    VITE_FIREBASE_API_KEY=your_api_key_here
-   VITE_FIREBASE_DATABASE_URL=https://your_project_id-default-rtdb.firebaseio.com
    VITE_FIREBASE_PROJECT_ID=your_project_id
    ```
 
 ### 4. Security Rules (Optional but Recommended)
 
-For production, update your Firebase Realtime Database rules:
+For production, update your Cloud Firestore security rules:
 
-```json
-{
-  "rules": {
-    "responses": {
-      ".read": true,
-      ".write": true,
-      "cocktailBar": {
-        ".validate": "newData.isNumber()"
-      },
-      "champagneOnly": {
-        ".validate": "newData.isNumber()"
-      }
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /surveys/christmas-party {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['cocktailBar', 'champagneOnly'])
+                   && request.resource.data.cocktailBar is int
+                   && request.resource.data.champagneOnly is int;
     }
   }
 }
@@ -99,5 +95,5 @@ npm run preview
 
 - React 18
 - Vite
-- Firebase Realtime Database
+- Cloud Firestore
 - CSS3
