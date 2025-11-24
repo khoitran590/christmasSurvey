@@ -42,12 +42,8 @@ This app uses Firebase Realtime Database to store and sync survey responses in r
 2. Open `.env.local` and fill in your Firebase credentials from step 1:
    ```env
    VITE_FIREBASE_API_KEY=your_api_key_here
-   VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
    VITE_FIREBASE_DATABASE_URL=https://your_project_id-default-rtdb.firebaseio.com
    VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
    ```
 
 ### 4. Security Rules (Optional but Recommended)
