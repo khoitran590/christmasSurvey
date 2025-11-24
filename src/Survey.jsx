@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { database } from './firebase'
-import { ref, onValue, runTransaction } from 'firebase/database'
+import { db } from './firebase'
+import { doc, onSnapshot, updateDoc, increment, setDoc, getDoc } from 'firebase/firestore'
 
 function Survey() {
   const [selectedOption, setSelectedOption] = useState(null)
@@ -12,12 +12,15 @@ function Survey() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const responsesRef = ref(database, 'responses')
+    const responsesRef = doc(db, 'surveys', 'christmas-party')
 
-    const unsubscribe = onValue(responsesRef, (snapshot) => {
-      const data = snapshot.val()
-      if (data) {
-        setResponses(data)
+    const unsubscribe = onSnapshot(responsesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data()
+        setResponses({
+          cocktailBar: data.cocktailBar || 0,
+          champagneOnly: data.champagneOnly || 0
+        })
       } else {
         setResponses({
           cocktailBar: 0,
@@ -33,12 +36,22 @@ function Survey() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (selectedOption) {
-      const responseRef = ref(database, `responses/${selectedOption}`)
+      const surveyRef = doc(db, 'surveys', 'christmas-party')
 
       try {
-        await runTransaction(responseRef, (currentValue) => {
-          return (currentValue || 0) + 1
-        })
+        const docSnap = await getDoc(surveyRef)
+
+        if (!docSnap.exists()) {
+          await setDoc(surveyRef, {
+            cocktailBar: selectedOption === 'cocktailBar' ? 1 : 0,
+            champagneOnly: selectedOption === 'champagneOnly' ? 1 : 0
+          })
+        } else {
+          await updateDoc(surveyRef, {
+            [selectedOption]: increment(1)
+          })
+        }
+
         setSubmitted(true)
       } catch (error) {
         console.error('Error submitting response:', error)
